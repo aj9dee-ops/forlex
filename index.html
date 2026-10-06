@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GOLDVISION PRO | ระบบวิเคราะห์การเทรดทองคำ & ฟอเร็กซ์ (1M Scalping / SMC / Divergence)</title>
+  
+  <!-- Tailwind CSS via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            gold: {
+              400: '#fbbf24',
+              500: '#f59e0b',
+              600: '#d97706',
+            },
+            dark: {
+              950: '#06090f',
+              900: '#080c14',
+              800: '#0f172a',
+              700: '#1e293b'
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-[#080c14] text-slate-100 min-h-screen">
+
+  <!-- Top Navigation & Control Bar -->
+  <header class="sticky top-0 z-50 bg-[#0d131f]/95 backdrop-blur-md border-b border-gray-800/80 px-4 lg:px-8 py-3">
+    <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
+      
+      <!-- Brand Logo -->
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-600 via-amber-400 to-yellow-200 flex items-center justify-center shadow-lg shadow-amber-500/25">
+          <i class="fas fa-chart-pie text-black text-lg"></i>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="text-xl font-bold tracking-tight bg-gradient-to-r from-amber-400 via-yellow-200 to-amber-500 bg-clip-text text-transparent">GOLDVISION PRO</span>
+            <span class="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/30">1M Scalp & SMC</span>
+          </div>
+          <p class="text-xs text-gray-400">ระบบวิเคราะห์ทองคำ & Forex (โหมดสไนเปอร์ 1 นาที + ปรับแต่งอินดิเคเตอร์กราฟจริง)</p>
+        </div>
+      </div>
+
+      <!-- Asset Switcher Tabs -->
+      <div class="flex items-center bg-gray-900/90 p-1 rounded-xl border border-gray-800 text-xs font-medium">
+        <button class="asset-btn active bg-amber-500/20 text-amber-400 border border-amber-500/50 px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5" data-asset="XAUUSD">
+          <span>🥇 ทองคำ (XAU/USD)</span>
+        </button>
+        <button class="asset-btn px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 text-gray-300 hover:text-white" data-asset="BTCUSD">
+          <span>⚡ BTC/USD</span>
+        </button>
+        <button class="asset-btn px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 text-gray-300 hover:text-white" data-asset="EURUSD">
+          <span>💶 EUR/USD</span>
+        </button>
+        <button class="asset-btn px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 text-gray-300 hover:text-white" data-asset="GBPUSD">
+          <span>💷 GBP/USD</span>
+        </button>
+      </div>
+
+      <!-- Live Ticker Bar -->
+      <div class="flex items-center gap-3 bg-gray-900/80 border border-gray-800 px-3.5 py-1.5 rounded-xl">
+        <div class="flex items-center gap-1.5">
+          <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 live-dot"></span>
+          <span id="currentAssetTitle" class="text-xs font-semibold text-gray-400">XAU/USD:</span>
+        </div>
+        <div class="flex items-baseline gap-2">
+          <span id="liveGoldPrice" class="text-lg font-black font-mono tracking-tight text-white">$---.--</span>
+          <span id="priceChange24h" class="text-xs px-2 py-0.5 rounded font-mono bg-gray-800 text-gray-400">--%</span>
+        </div>
+        <div id="scalp1mBadge" class="hidden px-2 py-0.5 rounded-full text-[10px] font-bold badge-scalp-1m flex items-center gap-1 shadow-md">
+          <i class="fas fa-bolt"></i> 1M Scalp Active
+        </div>
+      </div>
+
+      <!-- Timeframe, Alerts, Font Size & Settings -->
+      <div class="flex items-center gap-2">
+        
+        <!-- Timeframes: Includes 1M (1 นาที สไนเปอร์ Scalping) -->
+        <div class="flex items-center bg-gray-900/90 p-1 rounded-xl border border-gray-800 text-xs font-medium">
+          <button class="tf-btn px-2.5 py-1 rounded-lg transition-all text-purple-300 font-bold" data-tf="1m" title="สไนเปอร์ เทรดสั้น 1 นาที">⚡ 1M</button>
+          <button class="tf-btn px-2 py-1 rounded-lg transition-all" data-tf="5m">5M</button>
+          <button class="tf-btn px-2 py-1 rounded-lg transition-all" data-tf="15m">15M</button>
+          <button class="tf-btn active bg-amber-500/20 text-amber-400 border border-amber-500/50 px-2 py-1 rounded-lg transition-all" data-tf="1h">1H</button>
+          <button class="tf-btn px-2 py-1 rounded-lg transition-all" data-tf="4h">4H</button>
+          <button class="tf-btn px-2 py-1 rounded-lg transition-all" data-tf="1d">1D</button>
+        </div>
+
+        <!-- Font Size Scale Controls -->
+        <div class="hidden md:flex items-center bg-gray-900/90 p-1 rounded-xl border border-gray-800 text-xs">
+          <button class="font-size-btn px-2 py-1 rounded-lg bg-gray-700 text-white" data-size="normal" title="ขนาดตัวอักษรปกติ">A</button>
+          <button class="font-size-btn px-2 py-1 rounded-lg text-gray-400 hover:text-white" data-size="large" title="ตัวอักษรใหญ่">A+</button>
+          <button class="font-size-btn px-2 py-1 rounded-lg text-gray-400 hover:text-white" data-size="xlarge" title="ตัวอักษรใหญ่พิเศษ">A++</button>
+        </div>
+
+        <!-- AI Thai Voice Speech Toggle -->
+        <button id="btnVoiceToggle" title="เปิด/ปิดเสียงพูด AI ภาษาไทย" class="p-2 rounded-xl bg-gray-900 hover:bg-gray-800 border border-gray-800 transition-all text-cyan-400">
+          <i class="fas fa-bullhorn"></i>
+        </button>
+
+        <button id="btnTestVoice" title="ทดสอบเสียงพูด AI" class="hidden sm:inline-block px-2 py-1 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 text-xs">
+          <i class="fas fa-play mr-1 text-[10px]"></i> ฟังเสียง AI
+        </button>
+
+        <!-- Sound Tone Bell Toggle -->
+        <button id="btnSoundToggle" title="เปิด/ปิดเสียงเตือน Tone" class="p-2 rounded-xl bg-gray-900 hover:bg-gray-800 border border-gray-800 transition-all text-amber-400">
+          <i class="fas fa-bell"></i>
+        </button>
+
+        <!-- Telegram / Notification Settings Modal Trigger -->
+        <button id="btnOpenTelegramSettings" title="ตั้งค่าการแจ้งเตือน Telegram Bot" class="p-2 rounded-xl bg-gray-900 hover:bg-gray-800 border border-gray-800 transition-all text-blue-400">
+          <i class="fab fa-telegram"></i>
+        </button>
+
+        <!-- Refresh Button -->
+        <button id="btnRefresh" title="รีเฟรชข้อมูลวิเคราะห์ใหม่" class="p-2 rounded-xl bg-gray-900 hover:bg-gray-800 text-gray-300 hover:text-white border border-gray-800 transition-all">
+          <i class="fas fa-rotate"></i>
+        </button>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- High-Impact Economic News Alert Warning Banner -->
+  <div class="bg-gradient-to-r from-rose-950/60 via-red-900/30 to-rose-950/60 border-b border-rose-500/40 px-4 py-2">
+    <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3 text-xs">
+      <div class="flex items-center gap-2.5">
+        <span class="flex h-2.5 w-2.5 relative">
+          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+          <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-rose-500"></span>
+        </span>
+        <span class="text-rose-300 font-medium">
+          <b>⚠️ สภาวะเฝ้าระวังข่าวเศรษฐกิจกล่องแดง (High-Impact USD News):</b> วันนี้มีรายงานข่าวสำคัญ (US CPI / Non-Farm / ดอกเบี้ย Fed) แนะนำชะลอการเปิด Position ก่อนข่าว 15-30 นาที หรือขยับ SL ป้องกันทุน
+        </span>
+      </div>
+      <a href="#newsSection" class="px-3 py-1 rounded-lg bg-rose-500/20 hover:bg-rose-500 text-rose-300 hover:text-white font-bold transition-all text-[11px] border border-rose-500/40">
+        ดูตารางข่าวเศรษฐกิจทั้งหมด <i class="fas fa-arrow-down ml-1"></i>
+      </a>
+    </div>
+  </div>
+
+  <!-- Notification Toast -->
+  <div id="toast" class="fixed bottom-6 right-6 z-50 bg-emerald-600 text-white px-5 py-3 rounded-xl shadow-2xl transition-all duration-300 transform translate-y-4 opacity-0 pointer-events-none flex items-center gap-3 font-medium text-sm">
+    <i class="fas fa-circle-check text-lg"></i>
+    <span>คัดลอกข้อมูลสำเร็จ</span>
+  </div>
+
+  <!-- Telegram Settings Modal Dialog -->
+  <div id="modalTelegram" class="hidden fixed inset-0 z-50 modal-overlay flex items-center justify-center p-4">
+    <div class="glass-card max-w-md w-full p-6 border border-gray-700 bg-gray-900/95 shadow-2xl rounded-2xl relative">
+      <div class="flex justify-between items-center pb-3 border-b border-gray-800 mb-4">
+        <h3 class="text-base font-bold text-white flex items-center gap-2">
+          <i class="fab fa-telegram text-blue-400 text-lg"></i> ตั้งค่าการแจ้งเตือน Telegram Bot
+        </h3>
+        <button id="btnCloseTelegramModal" class="text-gray-400 hover:text-white"><i class="fas fa-xmark text-lg"></i></button>
+      </div>
+
+      <form id="formTelegramSettings" class="space-y-4 text-xs">
+        <div class="flex items-center justify-between p-3 rounded-xl bg-gray-800/50 border border-gray-700/60">
+          <div>
+            <div class="font-bold text-gray-200">เปิดระบบส่งสัญญาณอัตโนมัติ</div>
+            <div class="text-[11px] text-gray-400">ส่งแจ้งเตือนเข้า Telegram ทันทีเมื่อเกิดสัญญาณใหม่</div>
+          </div>
+          <input type="checkbox" id="tgEnabled" class="w-4 h-4 accent-amber-500 rounded cursor-pointer">
+        </div>
+
+        <div>
+          <label class="block text-gray-300 mb-1 font-semibold">Telegram Bot Token:</label>
+          <input type="text" id="tgBotToken" placeholder="เช่น 123456789:ABCdefGhIJKlmNoPQRsTUVwxyZ" class="w-full bg-gray-950 border border-gray-700 rounded-lg px-3 py-2 text-white font-mono focus:border-amber-400 outline-none">
+          <span class="text-[10px] text-gray-500">สร้าง Bot ได้ฟรีจาก @BotFather บน Telegram</span>
+        </div>
+
+        <div>
+          <label class="block text-gray-300 mb-1 font-semibold">Telegram Chat ID / Group ID:</label>
+          <input type="text" id="tgChatId" placeholder="เช่น 987654321 หรือ -100123456789" class="w-full bg-gray-950 border border-gray-700 rounded-lg px-3 py-2 text-white font-mono focus:border-amber-400 outline-none">
+          <span class="text-[10px] text-gray-500">หา Chat ID ของคุณได้จากบอท @userinfobot</span>
+        </div>
+
+        <div class="flex gap-2 pt-2">
+          <button type="button" id="btnTestTelegram" class="w-1/2 py-2 rounded-lg bg-blue-600/30 hover:bg-blue-600 text-blue-300 hover:text-white font-bold transition-all border border-blue-500/40">
+            <i class="fas fa-paper-plane mr-1"></i> ส่งทดสอบ
+          </button>
+          <button type="submit" class="w-1/2 py-2 rounded-lg bg-amber-500 hover:bg-amber-400 text-black font-bold transition-all shadow-md">
+            <i class="fas fa-floppy-disk mr-1"></i> บันทึกการตั้งค่า
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Custom Mode Alert Banner -->
+  <div id="customBanner" class="hidden bg-gradient-to-r from-amber-600/30 via-yellow-500/20 to-amber-600/30 border-b border-amber-500/40 px-4 py-2.5 text-center text-xs font-medium text-amber-300">
+    <div class="max-w-7xl mx-auto flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <i class="fas fa-sliders text-amber-400"></i>
+        <span>คุณกำลังอยู่ใน <b>โหมดจำลองราคาและวิเคราะห์กำหนดเอง (Manual Simulation Mode)</b></span>
+      </div>
+      <button id="btnResetCustom" class="px-3 py-1 rounded-lg bg-amber-500 hover:bg-amber-400 text-black font-bold text-xs transition-all">
+        กลับสู่การวิเคราะห์กราฟสด
+      </button>
+    </div>
+  </div>
+
+  <!-- Main Container -->
+  <main class="max-w-7xl mx-auto px-4 lg:px-8 py-6 space-y-6">
+
+    <!-- Loading Overlay -->
+    <div id="loadingIndicator" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center">
+      <div class="bg-gray-900 p-6 rounded-2xl border border-gray-800 flex flex-col items-center gap-3 shadow-2xl">
+        <div class="w-10 h-10 border-4 border-amber-500/20 border-t-amber-500 rounded-full animate-spin"></div>
+        <p class="text-sm font-semibold text-amber-400">กำลังประมวลผลดัชนีทางเทคนิคและสแกนแท่งเทียน...</p>
+      </div>
+    </div>
+
+    <!-- Section 1: Top Signal Overview Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+      <!-- Left Column: Core Signal Card + Strategy Tabs (7 cols) -->
+      <div class="lg:col-span-7 space-y-6">
+
+        <!-- Main Dynamic Signal Card -->
+        <div id="mainSignalCard" class="glass-card p-6 relative overflow-hidden transition-all duration-300 border border-gray-800">
+          
+          <div class="absolute -right-16 -top-16 w-56 h-56 bg-amber-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+          <!-- Top Meta Row -->
+          <div class="flex flex-wrap items-center justify-between gap-3 pb-5 border-b border-gray-800">
+            <div>
+              <div class="flex items-center gap-2 mb-1">
+                <span id="trendBadge" class="px-3 py-1 rounded-md text-xs font-bold bg-gray-800 text-gray-300">
+                  <i class="fas fa-spinner fa-spin mr-1"></i> กำลังวิเคราะห์...
+                </span>
+                <span class="text-xs text-gray-400">อัปเดตล่าสุด: <span id="lastUpdatedTime" class="text-gray-300">--:--:--</span></span>
+              </div>
+              <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                <span>แนวโน้มตลาด:</span>
+                <span id="trendDescription" class="text-amber-400 font-extrabold">--</span>
+              </h2>
+            </div>
+
+            <!-- Big Signal Badge -->
+            <div id="signalBadge" class="px-5 py-2 rounded-full font-extrabold text-lg bg-gray-800 text-gray-400 flex items-center gap-2 shadow-lg">
+              <i class="fas fa-chart-line"></i> กำลังประมวลผล
+            </div>
+          </div>
+
+          <!-- Key Trading Levels Display (Entry, SL, TP1, TP2, TP3, R:R) -->
+          <div class="mt-6 grid grid-cols-2 sm:grid-cols-3 gap-3.5">
+
+            <!-- Entry Box -->
+            <div class="bg-gray-900/80 border border-cyan-500/30 p-3.5 rounded-xl hover:border-cyan-500/60 transition-all">
+              <div class="flex items-center justify-between text-xs text-cyan-400 font-medium mb-1">
+                <span><i class="fas fa-crosshairs mr-1"></i> จุดเข้า (Entry)</span>
+                <span class="text-[10px] bg-cyan-500/20 px-1.5 py-0.5 rounded text-cyan-300">เหมาะสม</span>
+              </div>
+              <div id="valEntry" class="text-xl font-bold font-mono text-cyan-100">$---.--</div>
+              <div class="text-[11px] text-gray-400 mt-0.5">ราคาแนะนำเปิดออเดอร์</div>
+            </div>
+
+            <!-- SL Box -->
+            <div class="bg-gray-900/80 border border-rose-500/30 p-3.5 rounded-xl hover:border-rose-500/60 transition-all">
+              <div class="flex items-center justify-between text-xs text-rose-400 font-medium mb-1">
+                <span><i class="fas fa-shield-halved mr-1"></i> หยุดขาดทุน (SL)</span>
+                <span class="text-[10px] bg-rose-500/20 px-1.5 py-0.5 rounded text-rose-300">Dynamic ATR</span>
+              </div>
+              <div id="valSL" class="text-xl font-bold font-mono text-rose-200">$---.--</div>
+              <div id="distSL" class="text-[11px] text-rose-400 mt-0.5 font-mono">-0.00 USD</div>
+            </div>
+
+            <!-- Risk/Reward Box -->
+            <div class="bg-gray-900/80 border border-amber-500/30 p-3.5 rounded-xl hover:border-amber-500/60 transition-all">
+              <div class="flex items-center justify-between text-xs text-amber-400 font-medium mb-1">
+                <span><i class="fas fa-scale-balanced mr-1"></i> R:R Ratio (R)</span>
+                <span class="text-[10px] bg-amber-500/20 px-1.5 py-0.5 rounded text-amber-300">เฉลี่ย</span>
+              </div>
+              <div id="valRR" class="text-xl font-bold font-mono text-amber-200">1 : --</div>
+              <div class="text-[11px] text-gray-400 mt-0.5">ผลตอบแทนต่อความเสี่ยง</div>
+            </div>
+
+            <!-- TP1 Box -->
+            <div class="bg-gray-900/80 border border-emerald-500/30 p-3.5 rounded-xl hover:border-emerald-500/60 transition-all">
+              <div class="flex items-center justify-between text-xs text-emerald-400 font-medium mb-1">
+                <span><i class="fas fa-flag-checkered mr-1"></i> เป้าหมาย 1 (TP1)</span>
+                <span class="text-[10px] bg-emerald-500/20 px-1.5 py-0.5 rounded text-emerald-300">ปิด 50% & บังทุน</span>
+              </div>
+              <div id="valTP1" class="text-xl font-bold font-mono text-emerald-200">$---.--</div>
+              <div id="distTP1" class="text-[11px] text-emerald-400 mt-0.5 font-mono">+0.00 USD</div>
+            </div>
+
+            <!-- TP2 Box -->
+            <div class="bg-gray-900/80 border border-emerald-500/30 p-3.5 rounded-xl hover:border-emerald-500/60 transition-all">
+              <div class="flex items-center justify-between text-xs text-emerald-400 font-medium mb-1">
+                <span><i class="fas fa-bullseye mr-1"></i> เป้าหมาย 2 (TP2)</span>
+                <span class="text-[10px] bg-emerald-500/20 px-1.5 py-0.5 rounded text-emerald-300">สวิงโครงสร้าง</span>
+              </div>
+              <div id="valTP2" class="text-xl font-bold font-mono text-emerald-200">$---.--</div>
+              <div id="distTP2" class="text-[11px] text-emerald-400 mt-0.5 font-mono">+0.00 USD</div>
+            </div>
+
+            <!-- TP3 Box -->
+            <div class="bg-gray-900/80 border border-emerald-500/30 p-3.5 rounded-xl hover:border-emerald-500/60 transition-all">
+              <div class="flex items-center justify-between text-xs text-emerald-400 font-medium mb-1">
+                <span><i class="fas fa-rocket mr-1"></i> เป้าหมาย 3 (TP3)</span>
+                <span class="text-[10px] bg-emerald-500/20 px-1.5 py-0.5 rounded text-emerald-300">รันเทรนด์ใหญ่</span>
+              </div>
+              <div id="valTP3" class="text-xl font-bold font-mono text-emerald-200">$---.--</div>
+              <div id="distTP3" class="text-[11px] text-emerald-400 mt-0.5 font-mono">+0.00 USD</div>
+            </div>
+
+          </div>
+
+          <!-- Confidence Meter & Bar -->
+          <div class="mt-6 bg-gray-900/60 border border-gray-800 p-4 rounded-xl">
+            <div class="flex items-center justify-between text-xs mb-2">
+              <span class="font-bold text-gray-300 flex items-center gap-1.5">
+                <i class="fas fa-gauge-high text-amber-400"></i> ระดับความมั่นใจทางเทคนิค (Signal Confidence)
+              </span>
+              <span id="valConfidence" class="font-mono font-bold text-amber-300 text-sm">--%</span>
+            </div>
+            <div class="w-full bg-gray-800 rounded-full h-3 overflow-hidden p-0.5">
+              <div id="confidenceBar" class="h-full rounded-full transition-all duration-700 bg-amber-500" style="width: 0%"></div>
+            </div>
+          </div>
+
+          <!-- Reasons: Why Choose This Point -->
+          <div class="mt-6 pt-5 border-t border-gray-800">
+            <h3 class="text-sm font-bold text-amber-400 flex items-center gap-2 mb-3">
+              <i class="fas fa-lightbulb"></i> เหตุผลที่เลือกจุดนี้ & วิเคราะห์ราคาเข้าที่เหมาะสม (เพราะอะไร):
+            </h3>
+            <ul id="entryReasonsList" class="space-y-2">
+              <li class="text-xs text-gray-400 italic">กำลังรวบรวมเหตุผลทางเทคนิค...</li>
+            </ul>
+          </div>
+
+        </div>
+
+        <!-- Strategy Deep-Dive Tabs (SMC, Divergence & Dow/Fib, Indicators) -->
+        <div class="glass-card p-5 border border-gray-800">
+          <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-gray-800 mb-4">
+            <div class="flex items-center gap-2">
+              <button class="sub-tab-btn active px-3 py-1.5 rounded-lg border border-amber-500/50 bg-amber-500/10 text-amber-400 text-xs font-bold transition-all" data-tab="smc">
+                <i class="fas fa-brain mr-1"></i> Smart Money Concepts (SMC)
+              </button>
+              <button class="sub-tab-btn px-3 py-1.5 rounded-lg border border-gray-800 text-gray-400 hover:text-white text-xs font-bold transition-all" data-tab="divergence">
+                <i class="fas fa-wave-square mr-1"></i> Divergence & Fibonacci
+              </button>
+              <button class="sub-tab-btn px-3 py-1.5 rounded-lg border border-gray-800 text-gray-400 hover:text-white text-xs font-bold transition-all" data-tab="indicators">
+                <i class="fas fa-sliders mr-1"></i> ตัวเลขดัชนี (Indicators)
+              </button>
+            </div>
+            <span class="text-[11px] text-gray-500">สแกนสดตามแท่งเทียนล่าสุด</span>
+          </div>
+
+          <!-- Tab Panel 1: SMC Scanner -->
+          <div id="tab-smc" class="tab-panel space-y-4">
+            <div>
+              <h4 class="text-xs font-bold text-gray-300 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                <i class="fas fa-cube text-emerald-400"></i> Order Block (OB) โซนคำสั่งซื้อขายสถาบัน
+              </h4>
+              <div id="smcOrderBlocks" class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                <div class="text-xs text-gray-500 italic">กำลังสแกน Order Blocks...</div>
+              </div>
+            </div>
+
+            <div>
+              <h4 class="text-xs font-bold text-gray-300 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                <i class="fas fa-clone text-blue-400"></i> Fair Value Gap (FVG) โซนราคาไม่สมดุล (Imbalance)
+              </h4>
+              <div id="smcFVGs" class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                <div class="text-xs text-gray-500 italic">กำลังสแกน FVG...</div>
+              </div>
+            </div>
+
+            <div>
+              <h4 class="text-xs font-bold text-gray-300 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                <i class="fas fa-bolt text-amber-400"></i> Liquidity Sweep & Break of Structure (BOS)
+              </h4>
+              <div id="smcEvents" class="space-y-1.5">
+                <div class="text-xs text-gray-500 italic">กำลังตรวจสอบการกวาดสภาพคล่อง...</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tab Panel 2: Divergence & Fibonacci -->
+          <div id="tab-divergence" class="tab-panel hidden space-y-4">
+            <div>
+              <h4 class="text-xs font-bold text-gray-300 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                <i class="fas fa-arrows-split-up-and-left text-cyan-400"></i> การตรวจจับ Divergence (RSI / MACD)
+              </h4>
+              <div id="divList" class="space-y-2">
+                <div class="text-xs text-gray-500 italic">กำลังสแกนหา Divergence...</div>
+              </div>
+            </div>
+
+            <div>
+              <h4 class="text-xs font-bold text-gray-300 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                <i class="fas fa-layer-group text-amber-400"></i> ทฤษฎี Dow Theory & Fibonacci Retracement
+              </h4>
+              <div id="fibList">
+                <div class="text-xs text-gray-500 italic">กำลังคำนวณระดับ Fibonacci...</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tab Panel 3: Technical Indicators -->
+          <div id="tab-indicators" class="tab-panel hidden space-y-3">
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2 text-center text-xs">
+              <div class="bg-gray-900/80 p-2.5 rounded-lg border border-gray-800">
+                <div class="text-gray-400 mb-1">RSI (14)</div>
+                <div id="valRSI" class="font-bold font-mono text-amber-300 text-sm">--</div>
+              </div>
+              <div class="bg-gray-900/80 p-2.5 rounded-lg border border-gray-800">
+                <div class="text-gray-400 mb-1">EMA Fast</div>
+                <div id="valEMA20" class="font-bold font-mono text-cyan-300 text-sm">--</div>
+              </div>
+              <div class="bg-gray-900/80 p-2.5 rounded-lg border border-gray-800">
+                <div class="text-gray-400 mb-1">EMA Slow</div>
+                <div id="valEMA50" class="font-bold font-mono text-blue-300 text-sm">--</div>
+              </div>
+              <div class="bg-gray-900/80 p-2.5 rounded-lg border border-gray-800">
+                <div class="text-gray-400 mb-1">EMA Trend</div>
+                <div id="valEMA200" class="font-bold font-mono text-purple-300 text-sm">--</div>
+              </div>
+              <div class="bg-gray-900/80 p-2.5 rounded-lg border border-gray-800">
+                <div class="text-gray-400 mb-1">ATR (ความผันผวน)</div>
+                <div id="valATR" class="font-bold font-mono text-amber-300 text-sm">--</div>
+              </div>
+              <div class="bg-gray-900/80 p-2.5 rounded-lg border border-gray-800">
+                <div class="text-gray-400 mb-1">MACD Hist</div>
+                <div id="valMACD" class="font-bold font-mono text-emerald-300 text-sm">--</div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- Right Column: Exact Signal Box, Trade Journal Quick Action, Lot Calc & Simulator (5 cols) -->
+      <div class="lg:col-span-5 space-y-6">
+
+        <!-- Exact Prompt Template Box -->
+        <div class="glass-card p-5 border border-amber-500/30 relative">
+          <div class="flex items-center justify-between pb-3 border-b border-gray-800 mb-4">
+            <div class="flex items-center gap-2">
+              <div class="w-3 h-3 rounded-full bg-amber-400 animate-pulse"></div>
+              <h3 class="font-bold text-sm text-amber-300 tracking-wide">กล่องสรุปสัญญาณ (Prompt Format)</h3>
+            </div>
+            <div class="flex gap-2">
+              <button id="btnCopyPromptFormat" title="คัดลอกเฉพาะข้อความตามโครงสร้าง" class="px-2.5 py-1 rounded-lg bg-amber-500/20 hover:bg-amber-500 text-amber-300 hover:text-black text-xs font-bold transition-all border border-amber-500/40">
+                <i class="fas fa-copy mr-1"></i> คัดลอกแบบย่อ
+              </button>
+              <button id="btnCopySignal" title="คัดลอกสัญญาณสวยงามสำหรับ LINE/Telegram" class="px-3 py-1 rounded-lg bg-amber-500 hover:bg-amber-400 text-black text-xs font-bold transition-all shadow-md">
+                <i class="fas fa-share-nodes mr-1"></i> แชร์สัญญาณ
+              </button>
+            </div>
+          </div>
+
+          <div id="exactTemplateContent" class="bg-black/50 p-4 rounded-xl border border-gray-800 font-mono text-sm leading-relaxed overflow-x-auto text-gray-200">
+            <div class="text-gray-500 italic">กำลังโหลดข้อมูลสัญญาณ...</div>
+          </div>
+
+          <!-- Quick Action to Log Trade -->
+          <div class="mt-4 pt-3 border-t border-gray-800 flex items-center justify-between">
+            <span class="text-xs text-gray-400">บันทึกแผนเทรดนี้เข้าสมุดเทรด:</span>
+            <button id="btnLogTrade" class="px-3 py-1.5 rounded-lg bg-emerald-600/30 hover:bg-emerald-600 text-emerald-300 hover:text-white font-bold text-xs transition-all border border-emerald-500/40 flex items-center gap-1.5">
+              <i class="fas fa-book-bookmark"></i> + บันทึกไม้ปัจจุบันจากสัญญาณ
+            </button>
+          </div>
+        </div>
+
+        <!-- Lot Size & Money Management Calculator -->
+        <div class="glass-card p-5 border border-gray-800">
+          <h3 class="text-sm font-bold text-white flex items-center gap-2 mb-4">
+            <i class="fas fa-calculator text-cyan-400"></i> เครื่องคำนวณขนาด Lot & Money Management
+          </h3>
+
+          <div class="grid grid-cols-2 gap-3 mb-4">
+            <div>
+              <label class="block text-xs text-gray-400 mb-1">เงินทุนพอร์ต (USD):</label>
+              <input type="number" id="calcBalance" value="1000" min="10" step="50" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-1.5 text-sm font-mono text-white focus:outline-none focus:border-amber-400">
+            </div>
+            <div>
+              <label class="block text-xs text-gray-400 mb-1">ความเสี่ยงต่อไม้ (%):</label>
+              <input type="number" id="calcRiskPercent" value="1.5" min="0.1" max="10" step="0.5" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-1.5 text-sm font-mono text-white focus:outline-none focus:border-amber-400">
+            </div>
+          </div>
+
+          <div class="bg-gray-900/90 p-3.5 rounded-xl border border-gray-800 space-y-2 text-xs">
+            <div class="flex justify-between items-center text-gray-300">
+              <span>ยอมขาดทุนสูงสุด (Risk Amount):</span>
+              <span id="calcRiskUSD" class="font-mono font-bold text-rose-400">$15.00</span>
+            </div>
+            <div class="flex justify-between items-center text-gray-300">
+              <span class="font-bold text-amber-300">ขนาด Lot ที่แนะนำ:</span>
+              <span id="calcLotSize" class="font-mono font-extrabold text-amber-300 text-sm">0.01 Lot</span>
+            </div>
+            <div class="pt-2 border-t border-gray-800 space-y-1">
+              <div class="flex justify-between text-gray-400 text-[11px]">
+                <span>กำไรที่ TP1:</span>
+                <span id="calcProfitTP1" class="font-mono text-emerald-400">+$--</span>
+              </div>
+              <div class="flex justify-between text-gray-400 text-[11px]">
+                <span>กำไรที่ TP2:</span>
+                <span id="calcProfitTP2" class="font-mono text-emerald-400">+$--</span>
+              </div>
+              <div class="flex justify-between text-gray-400 text-[11px]">
+                <span>กำไรที่ TP3:</span>
+                <span id="calcProfitTP3" class="font-mono text-emerald-400">+$--</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Custom Manual Price Simulator -->
+        <div class="glass-card p-5 border border-gray-800">
+          <h3 class="text-sm font-bold text-white flex items-center gap-2 mb-3">
+            <i class="fas fa-sliders text-amber-400"></i> จำลองราคาและแผนเทรดเอง (Custom Simulator)
+          </h3>
+          <form id="formCustomAnalysis" class="space-y-3">
+            <div>
+              <label class="block text-xs text-gray-400 mb-1">ระบุราคาที่ต้องการวิเคราะห์ ($):</label>
+              <input type="number" id="inputCustomPrice" step="0.1" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-1.5 text-sm font-mono text-white focus:outline-none focus:border-amber-400" placeholder="เช่น 2650.00">
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs text-gray-400 mb-1">เลือกทิศทาง:</label>
+                <select id="selectCustomTrend" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-amber-400">
+                  <option value="UP">ขาขึ้น (BUY)</option>
+                  <option value="DOWN">ขาลง (SELL)</option>
+                  <option value="SIDE">ไซด์เวย์ (WAIT)</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs text-gray-400 mb-1">ระยะ SL ป้องกัน:</label>
+                <input type="number" id="inputCustomBuffer" value="8.0" step="0.5" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-1.5 text-xs font-mono text-white focus:outline-none focus:border-amber-400">
+              </div>
+            </div>
+            <button type="submit" class="w-full py-2 rounded-lg bg-gray-800 hover:bg-gray-700 text-amber-400 font-bold text-xs border border-amber-500/30 transition-all flex items-center justify-center gap-2">
+              <i class="fas fa-wand-magic-sparkles"></i> คำนวณแผนเทรดตามราคานี้
+            </button>
+          </form>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- Section 2: Interactive Real-Time TradingView Chart with Indicator Customizer Panel -->
+    <div class="glass-card p-5 border border-gray-800 space-y-4">
+      
+      <!-- Chart Header & Presets -->
+      <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-gray-800/80">
+        <div class="flex items-center gap-2">
+          <i class="fas fa-chart-candlestick text-amber-400 text-lg"></i>
+          <div>
+            <h3 class="font-bold text-sm text-white flex items-center gap-2">
+              <span>กราฟราคาจริงแบบเรียลไทม์ (Live TradingView Chart)</span>
+              <span class="text-[11px] px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20 font-mono">Real-time Stream</span>
+            </h3>
+            <p class="text-xs text-gray-400">คลิกปุ่ม <b>"fx"</b> บนหัวกราฟจริงเพื่อเพิ่มอินดิเคเตอร์ใดๆ ของ TradingView หรือเลือก Preset สำเร็จรูปด้านล่าง</p>
+          </div>
+        </div>
+
+        <!-- 3 Instant Indicator Presets -->
+        <div class="flex flex-wrap items-center gap-2">
+          <span class="text-xs text-gray-400 font-semibold mr-1">สูตรอินดิเคเตอร์ด่วน:</span>
+          <button id="btnPresetScalp1M" class="px-3 py-1.5 rounded-lg bg-purple-600/20 hover:bg-purple-600 text-purple-300 hover:text-white border border-purple-500/40 text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm">
+            <i class="fas fa-bolt text-purple-400"></i> สไนเปอร์ 1M (EMA 9/21 + RSI 9)
+          </button>
+          <button id="btnPresetDayTrade" class="px-3 py-1.5 rounded-lg bg-blue-600/20 hover:bg-blue-600 text-blue-300 hover:text-white border border-blue-500/40 text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm">
+            <i class="fas fa-chart-line text-blue-400"></i> Day Trade (EMA 20/50 + MACD)
+          </button>
+          <button id="btnPresetSMC" class="px-3 py-1.5 rounded-lg bg-amber-600/20 hover:bg-amber-600 text-amber-300 hover:text-white border border-amber-500/40 text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm">
+            <i class="fas fa-shield text-amber-400"></i> SMC Swing (EMA 50/200 + BB)
+          </button>
+          <button id="btnToggleIndicatorPanel" class="px-3 py-1.5 rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-300 text-xs font-bold border border-gray-700 transition-all flex items-center gap-1.5">
+            <i class="fas fa-sliders"></i> ปรับแต่งค่าเอง
+          </button>
+        </div>
+      </div>
+
+      <!-- Active Indicators Badge Strip -->
+      <div class="flex flex-wrap items-center gap-2 text-xs">
+        <span class="text-gray-400 text-[11px] font-semibold">อินดิเคเตอร์ที่กำลังแสดงผลบนกราฟจริง:</span>
+        <div id="activeIndicatorsStrip" class="flex flex-wrap items-center gap-1.5">
+          <!-- Active badges rendered dynamically -->
+        </div>
+      </div>
+
+      <!-- Expandable Custom Indicator Control Panel -->
+      <div id="indicatorControlPanel" class="hidden bg-gray-900/90 p-4 rounded-xl border border-gray-700/80 space-y-3 text-xs">
+        <div class="font-bold text-white flex items-center justify-between">
+          <span><i class="fas fa-sliders text-amber-400 mr-1.5"></i> กำหนดค่าอินดิเคเตอร์สำหรับกราฟจริงและโมเดลคำนวณ:</span>
+          <span class="text-[11px] text-gray-400">ปรับแล้วกดปุ่ม "นำไปใช้กับกราฟจริง" ด้านล่าง</span>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          <!-- EMA Fast -->
+          <div class="p-2.5 rounded-lg bg-gray-950/70 border border-gray-800 space-y-1.5">
+            <label class="flex items-center gap-2 font-semibold text-gray-200 cursor-pointer">
+              <input type="checkbox" id="indEmaFastEnabled" class="accent-amber-500 rounded">
+              <span>EMA Fast (เส้นเร็ว)</span>
+            </label>
+            <div class="flex items-center gap-2">
+              <span class="text-gray-400 text-[11px]">Period:</span>
+              <input type="number" id="indEmaFastPeriod" value="9" min="2" max="100" class="w-20 bg-gray-900 border border-gray-700 rounded px-2 py-1 text-center font-mono text-white">
+            </div>
+          </div>
+
+          <!-- EMA Slow -->
+          <div class="p-2.5 rounded-lg bg-gray-950/70 border border-gray-800 space-y-1.5">
+            <label class="flex items-center gap-2 font-semibold text-gray-200 cursor-pointer">
+              <input type="checkbox" id="indEmaSlowEnabled" class="accent-amber-500 rounded">
+              <span>EMA Slow (เส้นกลาง)</span>
+            </label>
+            <div class="flex items-center gap-2">
+              <span class="text-gray-400 text-[11px]">Period:</span>
+              <input type="number" id="indEmaSlowPeriod" value="21" min="5" max="200" class="w-20 bg-gray-900 border border-gray-700 rounded px-2 py-1 text-center font-mono text-white">
+            </div>
+          </div>
+
+          <!-- EMA Trend -->
+          <div class="p-2.5 rounded-lg bg-gray-950/70 border border-gray-800 space-y-1.5">
+            <label class="flex items-center gap-2 font-semibold text-gray-200 cursor-pointer">
+              <input type="checkbox" id="indEmaTrendEnabled" class="accent-amber-500 rounded">
+              <span>EMA Trend (เทรนด์หลัก)</span>
+            </label>
+            <div class="flex items-center gap-2">
+              <span class="text-gray-400 text-[11px]">Period:</span>
+              <input type="number" id="indEmaTrendPeriod" value="50" min="20" max="400" class="w-20 bg-gray-900 border border-gray-700 rounded px-2 py-1 text-center font-mono text-white">
+            </div>
+          </div>
+
+          <!-- RSI -->
+          <div class="p-2.5 rounded-lg bg-gray-950/70 border border-gray-800 space-y-1.5">
+            <label class="flex items-center gap-2 font-semibold text-gray-200 cursor-pointer">
+              <input type="checkbox" id="indRsiEnabled" class="accent-amber-500 rounded">
+              <span>RSI (Relative Strength)</span>
+            </label>
+            <div class="flex items-center gap-2">
+              <span class="text-gray-400 text-[11px]">Period:</span>
+              <input type="number" id="indRsiPeriod" value="14" min="2" max="50" class="w-20 bg-gray-900 border border-gray-700 rounded px-2 py-1 text-center font-mono text-white">
+            </div>
+          </div>
+
+          <!-- MACD -->
+          <div class="p-2.5 rounded-lg bg-gray-950/70 border border-gray-800 space-y-1.5">
+            <label class="flex items-center gap-2 font-semibold text-gray-200 cursor-pointer">
+              <input type="checkbox" id="indMacdEnabled" class="accent-amber-500 rounded">
+              <span>MACD (12, 26, 9)</span>
+            </label>
+            <div class="text-[10px] text-gray-400">แสดง Histogram และ Signal Cross</div>
+          </div>
+
+          <!-- Bollinger Bands -->
+          <div class="p-2.5 rounded-lg bg-gray-950/70 border border-gray-800 space-y-1.5">
+            <label class="flex items-center gap-2 font-semibold text-gray-200 cursor-pointer">
+              <input type="checkbox" id="indBbEnabled" class="accent-amber-500 rounded">
+              <span>Bollinger Bands</span>
+            </label>
+            <div class="flex items-center gap-2">
+              <span class="text-gray-400 text-[11px]">P:</span>
+              <input type="number" id="indBbPeriod" value="20" min="5" max="100" class="w-14 bg-gray-900 border border-gray-700 rounded px-1.5 py-1 text-center font-mono text-white">
+              <span class="text-gray-400 text-[11px]">Dev:</span>
+              <input type="number" id="indBbDev" value="2" min="1" max="5" step="0.5" class="w-14 bg-gray-900 border border-gray-700 rounded px-1.5 py-1 text-center font-mono text-white">
+            </div>
+          </div>
+
+          <!-- Volume Bar -->
+          <div class="p-2.5 rounded-lg bg-gray-950/70 border border-gray-800 space-y-1.5">
+            <label class="flex items-center gap-2 font-semibold text-gray-200 cursor-pointer">
+              <input type="checkbox" id="indVolumeEnabled" class="accent-amber-500 rounded">
+              <span>Volume (ปริมาณการซื้อขาย)</span>
+            </label>
+            <div class="text-[10px] text-gray-400">แท่งวอลุ่มด้านล่างของกราฟ</div>
+          </div>
+
+          <!-- Apply Button -->
+          <div class="flex items-end">
+            <button id="btnApplyCustomIndicators" class="w-full py-2.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-black font-bold text-xs transition-all shadow-md flex items-center justify-center gap-2">
+              <i class="fas fa-check-double"></i> นำไปใช้กับกราฟจริง & คำนวณใหม่
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Real Live TradingView Widget Container -->
+      <div id="tradingview_container" class="w-full h-[550px] rounded-xl overflow-hidden border border-gray-800/80 bg-[#080c14]">
+        <!-- TradingView widget embeds here -->
+      </div>
+    </div>
+
+    <!-- Section 3: Forex Economic News Calendar (ตารางข่าวเศรษฐกิจ) -->
+    <div id="newsSection" class="glass-card p-5 border border-gray-800">
+      <div class="flex items-center justify-between mb-4 pb-3 border-b border-gray-800">
+        <div class="flex items-center gap-2.5">
+          <div class="w-3 h-3 rounded-full bg-rose-500 animate-pulse"></div>
+          <div>
+            <h3 class="text-sm font-bold text-white">ปฏิทินข่าวเศรษฐกิจสหรัฐฯ สำคัญ (Forex Economic News)</h3>
+            <p class="text-xs text-gray-400">ข่าวที่มีผลกระทบรุนแรงต่อราคาทองคำ XAU/USD และคู่เงินฟอเร็กซ์</p>
+          </div>
+        </div>
+        <span class="text-[11px] px-2.5 py-1 rounded-full bg-gray-800 text-gray-300 font-mono">เวลาประเทศไทย (GMT+7)</span>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr class="border-b border-gray-800 text-gray-400 text-xs font-semibold uppercase bg-gray-900/60">
+              <th class="py-2.5 px-3">เวลา / วัน</th>
+              <th class="py-2.5 px-3">สกุลเงิน</th>
+              <th class="py-2.5 px-3">เหตุการณ์ข่าวเศรษฐกิจ</th>
+              <th class="py-2.5 px-3">ระดับผลกระทบ</th>
+              <th class="py-2.5 px-3">คาดการณ์</th>
+              <th class="py-2.5 px-3">ครั้งก่อน</th>
+            </tr>
+          </thead>
+          <tbody id="newsTableBody">
+            <!-- Dynamic News Rows Rendered Here -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Section 4: Trade Journal & Win-Rate Tracker (ตารางบันทึกผลการเทรด) -->
+    <div class="glass-card p-5 border border-gray-800">
+      <div class="flex flex-wrap items-center justify-between gap-3 mb-4 pb-3 border-b border-gray-800">
+        <div class="flex items-center gap-2">
+          <i class="fas fa-book-journal-whills text-amber-400 text-base"></i>
+          <div>
+            <h3 class="text-sm font-bold text-white">สมุดบันทึกผลการเทรด & คำนวณอัตราชนะ (Trade Journal & Win-Rate Tracker)</h3>
+            <p class="text-xs text-gray-400">บันทึกสถิติและวัดผลกลยุทธ์การเทรดจริง</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Metric Stats Cards -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
+        <div class="bg-gray-900/80 p-3 rounded-xl border border-gray-800 text-center">
+          <div class="text-xs text-gray-400 mb-1">Win Rate (อัตราชนะ)</div>
+          <div id="metricWinRate" class="text-xl font-bold font-mono text-emerald-400">0%</div>
+        </div>
+        <div class="bg-gray-900/80 p-3 rounded-xl border border-gray-800 text-center">
+          <div class="text-xs text-gray-400 mb-1">จำนวนไม้ทั้งหมด</div>
+          <div id="metricTotalTrades" class="text-xl font-bold font-mono text-cyan-300">0 ไม้</div>
+        </div>
+        <div class="bg-gray-900/80 p-3 rounded-xl border border-gray-800 text-center">
+          <div class="text-xs text-gray-400 mb-1">สถิติ ชนะ / แพ้</div>
+          <div id="metricWinsLosses" class="text-base font-bold font-mono text-gray-200">ชนะ 0 | แพ้ 0</div>
+        </div>
+        <div class="bg-gray-900/80 p-3 rounded-xl border border-gray-800 text-center">
+          <div class="text-xs text-gray-400 mb-1">กำไร/ขาดทุนสุทธิ (USD)</div>
+          <div id="metricNetProfit" class="text-xl font-bold font-mono text-amber-300">$0.00</div>
+        </div>
+      </div>
+
+      <!-- Journal Table -->
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr class="border-b border-gray-800 text-gray-400 text-xs font-semibold uppercase bg-gray-900/60">
+              <th class="py-2.5 px-3">วันที่ / เวลา</th>
+              <th class="py-2.5 px-3">สินทรัพย์</th>
+              <th class="py-2.5 px-3">ประเภท</th>
+              <th class="py-2.5 px-3">ราคา Entry / SL / TP</th>
+              <th class="py-2.5 px-3">สถานะ</th>
+              <th class="py-2.5 px-3">กำไร/ขาดทุน ($)</th>
+              <th class="py-2.5 px-3 text-center">จัดการ</th>
+            </tr>
+          </thead>
+          <tbody id="journalTableBody">
+            <!-- Dynamic Journal Entries Rendered Here -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="mt-12 border-t border-gray-800/80 py-6 px-4 bg-[#06090f] text-center text-xs text-gray-500">
+    <div class="max-w-7xl mx-auto space-y-2">
+      <p class="font-semibold text-gray-400">GOLDVISION PRO - ระบบวิเคราะห์การเทรดทองคำ & ฟอเร็กซ์ (1M Scalping / SMC / Dow / Fibonacci / Divergence)</p>
+      <p class="text-[11px] text-gray-500">คำเตือนความเสี่ยง: การซื้อขายฟอเร็กซ์ ทองคำ และคริปโทเคอร์เรนซีมีความเสี่ยงสูง โปรดควบคุมความเสี่ยงด้วย Stop Loss และ Money Management เสมอ</p>
+    </div>
+  </footer>
+
+  <!-- App Script -->
+  <script src="app.js"></script>
+</body>
+</html>
